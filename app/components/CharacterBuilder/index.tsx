@@ -130,17 +130,19 @@ function CharacterChooser({
 }
 
 function VoiceChooserItem({
+  voice,
   isPlaying,
   playSample,
   index,
 }: {
+  voice: CharacterVoiceType;
   isPlaying: boolean;
   playSample: () => void;
   index: number;
 }) {
   return (
     <div className="flex flex-col items-center justify-center h-2/3 bg-[#D1D5DB] rounded-2xl max-w-md mx-1 mt-5">
-      <div className="font-bold text-sm font-[Luckiest Guy] mt-2">VOICE #{index + 1}</div>
+      <div className="font-bold text-sm font-[Luckiest Guy] mt-2">VOICE #{index + 1}: {voice.descriptor}</div>
       <div
         onClick={playSample}
         className="w-11/12 h-full p-3 bg-white rounded-full border-2 border-white hover:border-Holiday-Blue overflow-hidden inline-flex justify-center items-center mb-2 cursor-pointer"
@@ -178,21 +180,24 @@ function VoiceChooser({
   onChoose: (index: number) => void;
   disabled: boolean;
   currentAudio: { audio: HTMLAudioElement | null; index: number | null };
-  playSample: (voice: CharacterVoiceType, index: number) => void;
+  playSample: (voice: CharacterVoiceType, index: number, setIsPlaying: React.Dispatch<React.SetStateAction<boolean>>) => void;
 }) {
   const [voiceIndex, setVoiceIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const handleLeftClick = () => {
-    setVoiceIndex((index) => {
-      if (index == 0) {
-        return characterVoices.length - 1;
-      } else {
-        return index - 1;
-      }
-    });
+    let newIndex = voiceIndex - 1;
+    if (newIndex < 0) {
+      newIndex = characterVoices.length - 1;
+    }
+    setVoiceIndex(newIndex);
+
+    playSample(characterVoices[newIndex], newIndex, setIsPlaying);
   };
   const handleRightClick = () => {
-    setVoiceIndex((voiceIndex + 1) % characterVoices.length);
+    let newIndex = (voiceIndex + 1) % characterVoices.length;
+    setVoiceIndex(newIndex);
+    playSample(characterVoices[newIndex], newIndex, setIsPlaying);
   };
 
   useEffect(() => {
@@ -213,8 +218,9 @@ function VoiceChooser({
           {characterVoices.map((voice, index) => (
             <VoiceChooserItem
               key={index}
-              isPlaying={index == currentAudio.index}
-              playSample={() => playSample(voice, index)}
+              voice={voice}
+              isPlaying={isPlaying}
+              playSample={() => playSample(voice, index, setIsPlaying)}
               index={index}
             />
           ))}
@@ -248,7 +254,7 @@ export function CharacterBuilder() {
     index: null,
   });
 
-  const playSample = (voice: CharacterVoiceType, index: number) => {
+  const playSample = (voice: CharacterVoiceType, index: number, setIsPlaying: React.Dispatch<React.SetStateAction<boolean>>) => {
     if (currentAudio.audio) {
       currentAudio.audio.pause();
       currentAudio.audio.currentTime = 0;
@@ -257,11 +263,13 @@ export function CharacterBuilder() {
     // Play the new audio
     const newAudio = new Audio(`https://wsapi.fixie.ai/voice/preview/${voice.voiceId}`);
     newAudio.play();
+    setIsPlaying(true);
     setCurrentAudio({ audio: newAudio, index });
 
     // Handle audio end
     newAudio.addEventListener('ended', () => {
       setCurrentAudio({ audio: null, index: null });
+      setIsPlaying(false);
     });
   };
 
