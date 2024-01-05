@@ -275,12 +275,12 @@ export const characterVoices: CharacterVoiceType[] = [
   },
   {
     voiceId: 'crgPOqIHzeGhJhIs1cdl',
-    descriptor: 'american male',
+    descriptor: 'male US',
     character: 'yonder the yeti',
   },
   {
     voiceId: 'Kw6bwhvTaOuAcf6oyXJL',
-    descriptor: 'indian male',
+    descriptor: 'male India',
     character: 'kringle the krampus',
   },
 ];
